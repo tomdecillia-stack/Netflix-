@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Netflix Together — Student Concept</title>
+<meta name="description" content="Netflix Together: an unofficial student concept prototype for choosing a film together on one TV. Not affiliated with Netflix.">
+<style>
+:root{
+  --bg:#0f0f0f; --surface:#18181a; --surface-2:#222225; --surface-3:#2c2c30;
+  --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.22);
+  --text:#fff; --muted:#bdbdbd; --dim:#8a8a8a;
+  --red:#E50914; --red-hover:#f6121d; --red-dim:#6b1418;
+  --green:#46d369; --amber:#f5b041;
+  --radius:12px; --gutter:clamp(16px,6vw,128px);
+  --font:"Inter","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font-family:var(--font);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed}
+:focus-visible{outline:3px solid #fff;outline-offset:3px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:12px;top:-60px;background:#fff;color:#000;padding:10px 14px;border-radius:6px;z-index:100;font-weight:700}
+.skip:focus{top:12px}
+
+/* ---------- Header ---------- */
+.top{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,rgba(15,15,15,.96),rgba(15,15,15,.82));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.top-in{display:flex;align-items:center;gap:clamp(16px,3vw,48px);padding:20px var(--gutter);flex-wrap:wrap}
+.logo{background:none;border:0;padding:0;color:var(--red);font-weight:900;font-size:clamp(1.6rem,2.6vw,2.4rem);letter-spacing:-.035em;line-height:1;transform:scaleY(1.08)}
+.nav{display:flex;gap:clamp(14px,2.4vw,44px)}
+.nav-link{background:none;border:0;padding:8px 0;color:var(--muted);font-size:1.05rem;position:relative}
+.nav-link:hover{color:#fff}
+.nav-link[aria-current="page"]{color:#fff;font-weight:700}
+.nav-link[aria-current="page"]::after{content:"";position:absolute;left:50%;bottom:-8px;width:28px;height:3px;border-radius:2px;background:var(--red);transform:translateX(-50%)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.badge{border:1px solid var(--line-2);padding:10px 14px;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:#d6d6d6;white-space:nowrap}
+.icon-btn{width:46px;height:46px;display:grid;place-items:center;background:transparent;border:1px solid var(--line);border-radius:8px}
+.icon-btn:hover{background:var(--surface-2)}
+.avatar-k{width:44px;height:44px;border-radius:6px;display:grid;place-items:center;background:#2f6ea8;font-weight:800;font-size:1.25rem}
+
+/* ---------- Layout / type ---------- */
+main{flex:1;position:relative}
+.screen{padding:clamp(28px,6vh,72px) var(--gutter) 56px;animation:enter .5s cubic-bezier(.2,.7,.2,1) both}
+.no-anim .screen,.no-anim .screen *{animation:none!important}
+@keyframes enter{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.eyebrow{display:flex;align-items:center;gap:16px;margin:0 0 22px;font-size:.82rem;font-weight:800;letter-spacing:.34em;text-transform:uppercase}
+.eyebrow::before{content:"";width:34px;height:2px;background:var(--red);flex:none}
+.center .eyebrow{justify-content:center}
+.h1{font-weight:800;letter-spacing:-.045em;line-height:.98;margin:0 0 22px;font-size:clamp(2.6rem,6.2vw,6rem)}
+.h1:focus{outline:none}
+.h-xl{font-size:clamp(3.4rem,10.5vw,10rem);letter-spacing:-.055em;line-height:.9}
+.lead{font-size:clamp(1.05rem,1.6vw,1.4rem);color:#d8d8d8;line-height:1.5;margin:0 0 8px}
+.lead b{color:#fff}
+.muted{color:var(--dim)}
+.small{font-size:.92rem}
+.center{text-align:center}
+.center .lead{margin-inline:auto}
+.row{display:flex;align-items:center;gap:16px 28px;flex-wrap:wrap}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:14px;border:0;border-radius:4px;padding:18px 36px;font-weight:700;font-size:1.15rem;background:var(--red);color:#fff;transition:background .2s,transform .15s,opacity .2s}
+.btn:hover:not(:disabled){background:var(--red-hover)}
+.btn:active:not(:disabled){transform:scale(.98)}
+.btn .arr{transition:transform .2s}
+.btn:hover:not(:disabled) .arr{transform:translateX(5px)}
+.btn:disabled{background:var(--red-dim);color:rgba(255,255,255,.5)}
+.btn-ghost{background:var(--surface-2);border:1px solid var(--line)}
+.btn-ghost:hover:not(:disabled){background:var(--surface-3)}
+.btn-sm{padding:12px 20px;font-size:1rem}
+.link-btn{background:none;border:0;padding:8px 0;font-weight:700;font-size:1.1rem;color:#e6e6e6}
+.link-btn:hover{color:#fff;text-decoration:underline;text-underline-offset:4px}
+.tag{display:inline-block;border:1px solid var(--line);background:var(--surface);padding:5px 10px;border-radius:4px;font-size:.78rem;color:var(--muted)}
+
+/* ---------- Posters ---------- */
+.poster{position:relative;overflow:hidden;isolation:isolate;background:
+  radial-gradient(32% 26% at 74% 30%,var(--c) 0%,transparent 100%),
+  radial-gradient(60% 50% at 70% 32%,var(--c) 0%,transparent 75%),
+  radial-gradient(85% 75% at 12% 100%,var(--b) 0%,transparent 75%),
+  linear-gradient(155deg,var(--a) 0%,var(--b) 70%,#070707 100%);background-size:cover;background-position:center}
+.poster::before{content:"";position:absolute;inset:0;z-index:-1;background:
+  repeating-linear-gradient(112deg,rgba(255,255,255,.035) 0 2px,transparent 2px 11px),
+  radial-gradient(140% 90% at 50% 120%,rgba(0,0,0,.0),rgba(0,0,0,.45))}
+.poster.has-img::before{display:none}
+.poster::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.78) 100%);pointer-events:none}
+.poster .p-title{position:absolute;left:7%;right:7%;bottom:8%;z-index:2;margin:0;font-weight:900;text-transform:uppercase;letter-spacing:-.02em;line-height:.92;text-shadow:0 2px 18px rgba(0,0,0,.55);font-size:clamp(1.4rem,2.6vw,2.6rem)}
+.poster .p-sub{position:absolute;left:7%;top:7%;z-index:2;font-size:.68rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.72)}
+.poster.has-img .p-sub{display:none}
+.play-dot{position:absolute;top:10%;right:8%;z-index:3;width:42px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.85);background:rgba(0,0,0,.35);display:grid;place-items:center}
+
+/* ---------- Landing ---------- */
+.landing{padding:0;position:relative;min-height:calc(100vh - 90px);display:flex;flex-direction:column}
+.hero-bg{position:absolute;inset:0;z-index:0}
+.hero-bg .poster{position:absolute;inset:0}
+.hero-bg .poster .p-title,.hero-bg .poster .p-sub{display:none}
+.hero-bg::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(90deg,rgba(15,15,15,.97) 0%,rgba(15,15,15,.78) 38%,rgba(15,15,15,.15) 75%),
+  linear-gradient(0deg,var(--bg) 0%,transparent 35%)}
+.hero-in{position:relative;z-index:1;padding:clamp(40px,10vh,120px) var(--gutter) 40px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.ticks{display:flex;gap:10px 30px;flex-wrap:wrap;margin:34px 0 0;padding:0;list-style:none;color:#d0d0d0;font-size:.98rem;letter-spacing:.02em}
+.ticks li::before{content:"✓";margin-right:10px;color:#fff}
+.strip{position:relative;z-index:1;padding:0 var(--gutter) 40px}
+.strip-head{display:flex;align-items:center;gap:18px;margin-bottom:18px;flex-wrap:wrap}
+.strip-head h2{margin:0;font-size:1.3rem;letter-spacing:-.01em}
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.tile{padding:0;border:1px solid var(--line-2);border-radius:6px;overflow:hidden;background:none;aspect-ratio:16/10;transition:transform .25s,border-color .25s}
+.tile:hover{transform:translateY(-4px) scale(1.02);border-color:#fff}
+.tile .poster{width:100%;height:100%}
+.tile .p-title{font-size:clamp(.9rem,1.1vw,1.1rem);text-align:left}
+.tile .p-sub{display:none}
+
+/* ---------- Viewers ---------- */
+.stepper{display:flex;align-items:center;justify-content:center;gap:14px;margin:36px 0 40px;flex-wrap:wrap}
+.stepper label{color:var(--muted);margin-right:16px;font-size:1.05rem}
+.round{width:50px;height:50px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:1.6rem;line-height:1;display:grid;place-items:center}
+.round:hover:not(:disabled){background:var(--surface-3)}
+.round:disabled{opacity:.35}
+.num{width:98px;height:56px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:#fff;font:inherit;font-size:1.4rem;text-align:center;-moz-appearance:textfield}
+.num::-webkit-inner-spin-button,.num::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.profiles{display:flex;justify-content:center;flex-wrap:wrap;gap:26px 34px}
+.prof{position:relative;width:clamp(120px,13vw,200px)}
+.prof-btn{display:block;width:100%;background:none;border:0;padding:0;text-align:center}
+.prof-face{position:relative;aspect-ratio:1;border-radius:8px;display:grid;place-items:center;border:4px solid transparent;transition:transform .2s,border-color .2s,opacity .2s;opacity:.55}
+.prof-btn:hover .prof-face{transform:scale(1.04)}
+.prof-btn[aria-pressed="true"] .prof-face{border-color:#fff;opacity:1}
+.prof-face svg{width:58%}
+.check{position:absolute;right:-14px;bottom:-14px;width:36px;height:36px;border-radius:50%;background:var(--red);border:3px solid var(--bg);display:none;place-items:center;font-weight:900;font-size:1rem}
+.prof-btn[aria-pressed="true"] .check{display:grid}
+.prof-name{display:block;margin-top:20px;font-size:1.35rem;color:var(--muted)}
+.prof-btn[aria-pressed="true"] .prof-name{color:#fff}
+.prof-remove{position:absolute;top:-12px;right:-12px;width:30px;height:30px;border-radius:50%;border:1px solid var(--line-2);background:#000;font-size:1rem;line-height:1;display:grid;place-items:center;z-index:2}
+.prof-remove:hover{background:var(--red)}
+.add-face{aspect-ratio:1;border-radius:8px;border:3px dashed #555;display:grid;place-items:center;font-size:4.5rem;color:#888;font-weight:300;background:var(--surface);transition:border-color .2s,color .2s}
+.prof-btn:hover .add-face{border-color:#aaa;color:#fff}
+.count-line{margin:34px 0 28px;color:var(--muted);font-size:1.05rem}
+.note{margin-top:22px;color:var(--dim);font-size:.98rem}
+.warn{color:var(--amber)}
+
+/* ---------- Mood ---------- */
+.mood-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(28px,6vw,110px);align-items:center}
+.label{margin:36px 0 16px;font-size:1rem;text-transform:uppercase;letter-spacing:.02em;color:#e3e3e3}
+.label .muted{text-transform:none;font-size:.85rem;margin-left:10px}
+.chips{display:flex;flex-wrap:wrap;gap:14px}
+.chip{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:16px 28px;font-size:1.1rem;color:#e6e6e6;transition:background .15s,color .15s}
+.chip:hover{background:var(--surface-3)}
+.chip[aria-pressed="true"],.chip[aria-checked="true"]{background:#fff;color:#000;font-weight:500}
+.chip .ck{margin-right:12px}
+.switch{display:inline-flex;align-items:center;gap:16px;background:none;border:0;padding:4px 0;margin-top:34px;font-size:1.1rem;color:#e6e6e6}
+.track{width:48px;height:28px;border-radius:14px;background:#555;position:relative;transition:background .2s;flex:none}
+.knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch[aria-checked="true"] .track{background:var(--red)}
+.switch[aria-checked="true"] .knob{transform:translateX(20px)}
+.notice{margin:24px 0 0;padding:14px 18px;border-left:3px solid var(--red);background:var(--surface);border-radius:0 8px 8px 0;color:#ddd;max-width:620px}
+.mood-art{border-radius:var(--radius);overflow:hidden;aspect-ratio:13/10;position:relative;border:1px solid var(--line)}
+.mood-art .poster{position:absolute;inset:0}
+.mood-art .p-title,.mood-art .p-sub{display:none}
+.mood-art .poster::after{background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.85))}
+.art-copy{position:absolute;left:6%;right:6%;bottom:7%;z-index:3}
+.art-copy .pill{display:inline-block;border:1px solid var(--line-2);border-radius:20px;padding:6px 16px;font-size:.9rem;background:rgba(0,0,0,.35);margin-bottom:18px}
+.art-copy h3{margin:0 0 14px;font-size:clamp(1.6rem,3vw,2.8rem);font-weight:800;letter-spacing:-.035em;line-height:1.02}
+.art-copy p{margin:0;color:#ddd}
+.actions{margin-top:44px}
+
+/* ---------- Shortlist ---------- */
+.sl-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.viewers-pill{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line-2);border-radius:999px;padding:10px 20px;font-size:.98rem}
+.viewers-pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
+.summary{margin:22px 0 34px;color:var(--dim);font-size:.98rem}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(16px,2vw,32px)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;animation:enter .55s cubic-bezier(.2,.7,.2,1) both}
+.card:nth-child(2){animation-delay:.07s}.card:nth-child(3){animation-delay:.14s}
+.card .poster{aspect-ratio:16/10}
+.card-body{padding:26px 28px 30px}
+.card-title{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.card-title h3{margin:0;font-size:1.3rem}
+.play-btn{flex:none;width:48px;height:48px;border-radius:50%;border:2px solid #cfcfcf;background:none;display:grid;place-items:center}
+.play-btn:hover{background:#fff;color:#000;border-color:#fff}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:16px 0 12px;font-size:.98rem;color:#d6d6d6}
+.fit{color:var(--green)}
+.fit.long{color:var(--amber)}
+.rating{border:1px solid #888;padding:1px 6px;font-size:.82rem}
+.sub{color:var(--muted);margin:0 0 14px}
+.tagline{margin:0;color:#e3e3e3;line-height:1.5}
+
+/* ---------- Voting ---------- */
+.vote-grid{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,2.2fr);gap:clamp(28px,4vw,64px);align-items:center}
+.vote-grid .h1{font-size:clamp(2.4rem,4.4vw,4.4rem)}
+.voter{display:flex;align-items:center;gap:18px;margin:36px 0 30px}
+.voter-av{width:48px;height:48px;border-radius:6px;display:grid;place-items:center;font-weight:800;font-size:1.2rem}
+.voter b{display:block;font-size:1.15rem}
+.vcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.vcard{background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s,transform .2s;animation:enter .5s cubic-bezier(.2,.7,.2,1) both}
+.vcard:nth-child(2){animation-delay:.06s}.vcard:nth-child(3){animation-delay:.12s}
+.vcard.on{border-color:#fff;transform:translateY(-4px)}
+.vcard .poster{aspect-ratio:1/1}
+.vcard .p-title{font-size:clamp(1.1rem,1.8vw,1.9rem)}
+.want{border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface-2);padding:16px;font-size:1.08rem;transition:background .15s,color .15s}
+.want:hover{background:var(--surface-3)}
+.want[aria-pressed="true"]{background:#fff;color:#000;font-weight:700}
+.vcard .tagline{padding:18px 18px 22px;font-size:.96rem;color:#cfcfcf;flex:1}
+.prev{border:0;border-top:1px solid var(--line);background:var(--surface-2);padding:14px;font-size:.95rem;color:#ddd}
+.prev:hover{background:var(--surface-3);color:#fff}
+
+/* ---------- Handoff / reveal ---------- */
+.handoff{min-height:calc(100vh - 220px);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.swap{width:124px;height:124px;border-radius:22px;background:var(--surface-2);display:grid;place-items:center;margin:10px auto 40px;font-size:2.6rem}
+.pulse{width:110px;height:110px;border-radius:50%;margin:0 auto 40px;border:3px solid var(--line);border-top-color:var(--red);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- Results ---------- */
+.res-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(28px,5vw,80px);align-items:start}
+.match-card{border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-2);background:var(--surface)}
+.match-card .poster{aspect-ratio:16/9}
+.match-card .p-title{font-size:clamp(2rem,4.4vw,4.2rem)}
+.match-body{padding:26px 30px 30px}
+.tally{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:14px}
+.tally li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.tally .t-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:10px;font-weight:600}
+.tally .t-row span:last-child{color:var(--muted);font-weight:400;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:#333;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--red);border-radius:3px;transform-origin:left;animation:grow .9s .2s cubic-bezier(.2,.7,.2,1) both}
+.bar i.full{background:var(--green)}
+@keyframes grow{from{transform:scaleX(0)}}
+.options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:36px}
+.opt{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:border-color .2s,transform .2s,background .2s}
+.opt:hover{border-color:#fff;transform:translateY(-3px);background:var(--surface-2)}
+.opt .o-ic{font-size:1.6rem;margin-bottom:14px;display:block}
+.opt b{display:block;font-size:1.25rem;margin-bottom:8px}
+.opt span{color:var(--muted);line-height:1.45}
+.opt:disabled{opacity:.4;transform:none;border-color:var(--line)}
+
+/* ---------- Catalog ---------- */
+.grid-cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:22px;margin-top:30px}
+.cat{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;padding:0;text-align:left;transition:transform .2s,border-color .2s}
+.cat:hover{transform:translateY(-4px);border-color:#fff}
+.cat .poster{aspect-ratio:16/10}
+.cat .p-title{font-size:1.2rem}
+.cat-meta{padding:14px 16px 16px;color:var(--muted);font-size:.9rem}
+
+/* ---------- Modal / toast ---------- */
+.modal-back{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.78);display:grid;place-items:center;padding:16px;animation:fade .2s both}
+.modal{width:min(780px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;position:relative;animation:enter .3s both}
+.modal .poster{aspect-ratio:16/8}
+.modal .p-title{font-size:clamp(1.8rem,5vw,3.6rem)}
+.modal-body{padding:26px 30px 32px}
+.modal-x{position:absolute;top:14px;right:14px;z-index:5;width:42px;height:42px;border-radius:50%;border:0;background:rgba(0,0,0,.65);font-size:1.4rem}
+.modal-x:hover{background:#000}
+.modal-sm{width:min(460px,100%);padding:30px}
+.modal-sm h2{margin:0 0 10px;font-size:1.7rem;letter-spacing:-.03em}
+.field{width:100%;margin:18px 0 22px;padding:16px;border-radius:6px;border:1px solid var(--line-2);background:#111;color:#fff;font:inherit;font-size:1.1rem}
+.prog{height:4px;border-radius:2px;background:#333;margin:20px 0 8px;overflow:hidden}
+.prog i{display:block;height:100%;width:35%;background:var(--red);animation:slide 2.4s ease-in-out infinite alternate}
+@keyframes slide{from{transform:translateX(-100%)}to{transform:translateX(290%)}}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:90;background:#fff;color:#000;padding:14px 22px;border-radius:8px;font-weight:600;transition:opacity .25s,transform .25s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+/* ---------- Footer ---------- */
+footer{border-top:1px solid rgba(255,255,255,.07);padding:22px var(--gutter);display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap;font-size:.76rem;letter-spacing:.1em;color:#8d8d8d}
+footer .f-left{text-transform:uppercase}
+footer .f-right{display:flex;align-items:center;gap:20px;letter-spacing:.04em}
+.dots{display:flex;gap:8px}
+.dots i{width:6px;height:6px;border-radius:50%;background:#444}
+.dots i.on{background:var(--red)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1100px){
+  .tiles{grid-template-columns:repeat(3,1fr)}
+  .vote-grid{grid-template-columns:1fr}
+}
+@media (max-width:860px){
+  .mood-grid,.res-grid{grid-template-columns:1fr}
+  .mood-art{aspect-ratio:16/9;order:-1;display:none}
+  .cards,.vcards,.options{grid-template-columns:1fr}
+  .vcard .poster{aspect-ratio:16/9}
+}
+@media (max-width:640px){
+  .top-in{padding:14px 16px;gap:10px 16px}
+  .nav{order:3;width:100%;gap:24px}
+  .badge{font-size:.58rem;padding:7px 8px;letter-spacing:.14em}
+  .icon-btn{width:40px;height:40px}.avatar-k{width:40px;height:40px}
+  .top-right{gap:8px}
+  .tiles{grid-template-columns:repeat(2,1fr);gap:10px}
+  .btn{padding:16px 26px;font-size:1.05rem}
+  .chip{padding:13px 18px;font-size:1rem}
+  .stepper label{width:100%;text-align:center;margin:0}
+  .prof{width:calc(50% - 20px);max-width:170px}
+  .eyebrow{letter-spacing:.22em;font-size:.72rem}
+  .landing{min-height:0}
+  .card-body{padding:20px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#app">Skip to content</a>
+<header class="top">
+  <div class="top-in">
+    <button class="logo" data-action="go-landing" aria-label="Netflix Together, start page">NETFLIX</button>
+    <nav class="nav" aria-label="Main">
+      <button class="nav-link" data-action="go-landing" data-nav="home">Home</button>
+      <button class="nav-link" data-action="go-catalog" data-nav="movies">Movies</button>
+      <button class="nav-link" data-action="go-landing" data-nav="together">Together</button>
+    </nav>
+    <div class="top-right">
+      <span class="badge">Unofficial student concept</span>
+      <button class="icon-btn" data-action="fullscreen" aria-label="Toggle fullscreen" title="Fullscreen">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+      <span class="avatar-k" role="img" aria-label="Profile: Karina">K</span>
+    </div>
+  </div>
+</header>
+
+<main id="app" tabindex="-1" aria-live="polite"></main>
+
+<footer>
+  <span class="f-left">Netflix Together / Unofficial student prototype · Not affiliated with Netflix</span>
+  <span class="f-right"><span>Local demo · no accounts or syncing</span><span class="dots" id="dots" aria-hidden="true"></span></span>
+</footer>
+
+<div id="modal-root"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= DATA ================= */
+var GENRES = ["Comedy","Action","Romance","Adventure","Sci-fi","Drama","Mystery","Sports","Horror"];
+var TIMES = {
+  u2:  {label:"Under 2 hours", fits:function(m){return m<120;}},
+  u3:  {label:"Up to 3 hours", fits:function(m){return m<=180;}},
+  any: {label:"Any length",    fits:function(){return true;}}
+};
+// All titles are fictional and invented for this demo.
+var FILMS = [
+  {id:"midnight-detour", title:"Midnight Detour", genres:["Action","Comedy"], minutes:102, rating:"13+", subgenre:"Action comedy",
+   tagline:"One wrong turn. Two strangers. A night neither of them saw coming.", pal:["#0d1b3a","#7a1e22","#f0a840"]},
+  {id:"weekend-plan", title:"The Weekend Plan", genres:["Comedy"], minutes:95, rating:"13+", subgenre:"Comedy",
+   tagline:"A quiet weekend away becomes a spectacularly bad idea.", pal:["#a2453a","#e8b563","#2a6f8f"]},
+  {id:"city-of-chances", title:"City of Chances", genres:["Adventure","Comedy"], minutes:108, rating:"13+", subgenre:"Adventure comedy",
+   tagline:"A missing suitcase. A borrowed car. A city full of possibilities.", pal:["#1f5d66","#c2412f","#f0b54a"]},
+  {id:"orbit-nine", title:"Orbit Nine", genres:["Sci-fi","Adventure"], minutes:135, rating:"13+", subgenre:"Space adventure",
+   tagline:"Nine crew. One signal. A very long way from home.", pal:["#060a1f","#3b2a7a","#ff8a3d"]},
+  {id:"glass-city", title:"Glass City", genres:["Drama","Mystery"], minutes:118, rating:"13+", subgenre:"Mystery drama",
+   tagline:"Everyone in the tower has a secret. Only one of them is lying.", pal:["#0b1d2a","#1f4b5e","#9fd6e8"]},
+  {id:"seaside-summer", title:"Seaside Summer", genres:["Romance","Comedy"], minutes:98, rating:"13+", subgenre:"Romantic comedy",
+   tagline:"One summer. One coastline. One very inconvenient crush.", pal:["#1e6f9a","#f6c28b","#ff6f7d"]},
+  {id:"iron-pursuit", title:"Iron Pursuit", genres:["Action","Adventure"], minutes:116, rating:"13+", subgenre:"Action thriller",
+   tagline:"Three borders. Forty-eight hours. No second chances.", pal:["#1a1a1a","#7a3b12","#ff7a1a"]},
+  {id:"final-whistle", title:"Final Whistle", genres:["Sports","Drama"], minutes:112, rating:"13+", subgenre:"Sports drama",
+   tagline:"A team nobody believed in. A season nobody will forget.", pal:["#0c3b1f","#1f7a3a","#e8f06a"]},
+  {id:"fast-break", title:"Fast Break", genres:["Sports","Comedy"], minutes:104, rating:"13+", subgenre:"Sports comedy",
+   tagline:"The worst team in the league just hired the worst coach in history.", pal:["#1b2a6b","#f26b1d","#ffd23a"]},
+  {id:"heartline", title:"Heartline", genres:["Romance","Drama"], minutes:124, rating:"13+", subgenre:"Romantic drama",
+   tagline:"Two letters, twenty years apart, and one address they both remember.", pal:["#3a0d24","#b83a5e","#ffc2a8"]},
+  {id:"quiet-signal", title:"Quiet Signal", genres:["Sci-fi","Mystery"], minutes:109, rating:"13+", subgenre:"Sci-fi mystery",
+   tagline:"The radio telescope picked up a voice. It sounds exactly like hers.", pal:["#071a1f","#0f4d4d","#5ff2d0"]},
+  {id:"long-crossing", title:"The Long Crossing", genres:["Adventure","Drama"], minutes:158, rating:"13+", subgenre:"Epic adventure",
+   tagline:"A thousand miles of ice, and the one promise that keeps them walking.", pal:["#2b1d0e","#a8742e","#f5d9a0"]},
+  {id:"hollow-house", title:"The Hollow House", genres:["Horror","Mystery"], minutes:94, rating:"16+", subgenre:"Supernatural horror",
+   tagline:"The house was empty when they bought it. It isn't anymore.", pal:["#050505","#2a0d0d","#8a1a1a"]},
+  {id:"last-floor", title:"The Last Floor", genres:["Horror"], minutes:101, rating:"16+", subgenre:"Horror thriller",
+   tagline:"The lift only goes down. Something down there is waiting.", pal:["#0a0f0a","#1d2b1d","#9bbf6a"]},
+  {id:"lucky-strike", title:"Lucky Strike Lanes", genres:["Comedy","Sports"], minutes:91, rating:"13+", subgenre:"Feel-good comedy",
+   tagline:"One bowling alley. One last tournament. Zero practice.", pal:["#4a1460","#e0408a","#59d9ff"]}
+];
+var FEATURED = ["midnight-detour","weekend-plan","city-of-chances","orbit-nine","glass-city","seaside-summer"];
+var GUEST_COLORS = ["#7b4fb8","#2e8b57","#c0392b","#d35400","#16a085","#8e44ad"];
+var MAX_GUESTS = 6;
+var byId = {}; FILMS.forEach(function(f,i){ f.order=i; byId[f.id]=f; });
+
+/* ================= STATE ================= */
+var state = {
+  screen:"landing",
+  profiles:[
+    {id:"karina", name:"Karina", color:"#2f6ea8", selected:true},
+    {id:"alex",   name:"Alex",   color:"#c08a2a", selected:true}
+  ],
+  guests:[], guestSeq:0, guestDraft:0,
+  moods:["Comedy","Action"], time:"u2", noHorror:true, notice:"",
+  shortlist:[], seen:[], round:1,
+  voters:[], voteIdx:0, votes:{}, current:[]
+};
+var imgOK = {};
+
+/* ================= HELPERS ================= */
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function dur(m){ return Math.floor(m/60)+"h "+(m%60)+"m"; }
+var ARROW = '<svg class="arr" width="30" height="14" viewBox="0 0 30 14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M0 7h28M22 1l6 6-6 6"/></svg>';
+var PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>';
+var SMILE = '<svg viewBox="0 0 100 60" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" aria-hidden="true"><circle cx="22" cy="10" r="5" fill="#fff" stroke="none"/><circle cx="78" cy="10" r="5" fill="#fff" stroke="none"/><path d="M8 34 Q50 66 92 34"/></svg>';
+function allViewers(){ return state.profiles.concat(state.guests); }
+function selectedViewers(){ return allViewers().filter(function(v){return v.selected;}); }
+function namesPill(vs){
+  if(vs.length<=3) return vs.map(function(v){return esc(v.name);}).join(" + ");
+  return esc(vs[0].name)+" + "+(vs.length-1)+" others";
+}
+
+function poster(f, opts){
+  opts = opts||{};
+  var p = f.pal;
+  var cls = "poster"+(imgOK[f.id]?" has-img":"");
+  var style = "--a:"+p[0]+";--b:"+p[1]+";--c:"+p[2]+";"+(imgOK[f.id]?"background-image:url('images/"+f.id+".jpg')":"");
+  var t = opts.noTitle ? "" : '<p class="p-title" aria-hidden="true">'+esc(f.title)+'</p>';
+  return '<div class="'+cls+'" data-poster="'+f.id+'" style="'+style+'"><span class="p-sub" aria-hidden="true">'+esc(f.subgenre)+'</span>'+t+(opts.play?'<span class="play-dot" aria-hidden="true">'+PLAY+'</span>':'')+'</div>';
+}
+
+/* Look for images/<film-id>.jpg; fall back to CSS gradient posters. */
+function probeImages(){
+  FILMS.forEach(function(f){
+    var img = new Image();
+    img.onload = function(){
+      imgOK[f.id] = true;
+      document.querySelectorAll('[data-poster="'+f.id+'"]').forEach(function(el){
+        el.classList.add("has-img");
+        el.style.backgroundImage = "url('images/"+f.id+".jpg')";
+      });
+    };
+    img.src = "images/"+f.id+".jpg";
+  });
+}
+
+/* ================= RANKING ================= */
+function rankFilms(){
+  var fits = TIMES[state.time].fits;
+  return FILMS
+    .filter(function(f){ return !(state.noHorror && f.genres.indexOf("Horror")>-1); })
+    .map(function(f){
+      var overlap = f.genres.filter(function(g){return state.moods.indexOf(g)>-1;}).length;
+      var fit = fits(f.minutes);
+      return {f:f, overlap:overlap, fit:fit, score: overlap*10 + (fit?5:0)};
+    })
+    .sort(function(a,b){ return b.score-a.score || a.f.order-b.f.order; });
+}
+function buildShortlist(fresh){
+  var ranked = rankFilms().map(function(r){return r.f.id;});
+  var exclude = fresh ? state.seen : [];
+  var pick = ranked.filter(function(id){return exclude.indexOf(id)<0;}).slice(0,3);
+  if(pick.length<3){ // ran out of unseen titles: top up from the best already-seen ones
+    ranked.forEach(function(id){ if(pick.length<3 && pick.indexOf(id)<0 && state.shortlist.indexOf(id)<0) pick.push(id); });
+  }
+  state.shortlist = pick;
+  pick.forEach(function(id){ if(state.seen.indexOf(id)<0) state.seen.push(id); });
+}
+function summaryLine(){
+  var moods = GENRES.filter(function(g){return state.moods.indexOf(g)>-1;});
+  return state.shortlist.length+" films selected · "+(moods.length?moods.join(" / "):"Any genre")+" · "+TIMES[state.time].label+(state.noHorror?" · No horror":"");
+}
+
+/* ================= SCREENS ================= */
+var STEP = {landing:0,viewers:1,mood:2,shortlist:3,vote:4,handoff:4,reveal:5,results:5,enjoy:5,catalog:-1};
+
+var screens = {
+landing: function(){
+  return '<section class="screen landing" aria-labelledby="h">'+
+    '<div class="hero-bg" aria-hidden="true">'+poster(byId["midnight-detour"],{noTitle:true})+'</div>'+
+    '<div class="hero-in">'+
+      '<p class="eyebrow">A better kind of movie night</p>'+
+      '<h1 class="h1 h-xl" id="h" tabindex="-1">Netflix<br>Together.</h1>'+
+      '<p class="lead">Less scrolling. More watching.<br>Find something you <b>both</b> want to watch.</p>'+
+      '<div style="margin-top:34px"><button class="btn" data-action="start">Start Together '+ARROW+'</button></div>'+
+      '<ul class="ticks" aria-label="How it works"><li>Choose your mood</li><li>Vote privately</li><li>Find your match</li></ul>'+
+    '</div>'+
+    '<div class="strip">'+
+      '<div class="strip-head"><h2>Your next shared favourite</h2><span class="tag">Fictional titles for this demo</span></div>'+
+      '<div class="tiles">'+FEATURED.map(function(id){var f=byId[id];
+        return '<button class="tile" data-action="preview" data-id="'+id+'" aria-label="Preview '+esc(f.title)+'">'+poster(f,{play:true})+'</button>';}).join("")+'</div>'+
+    '</div></section>';
+},
+
+viewers: function(){
+  var vs = selectedViewers(), n = vs.length;
+  var tiles = allViewers().map(function(v){
+    var isGuest = !!v.guest;
+    return '<div class="prof">'+
+      '<button class="prof-btn" data-action="toggle-profile" data-id="'+v.id+'" aria-pressed="'+v.selected+'" aria-label="'+esc(v.name)+(v.selected?", watching":", not watching")+'">'+
+        '<span class="prof-face" style="background:'+v.color+'">'+SMILE+'<span class="check" aria-hidden="true">✓</span></span>'+
+        '<span class="prof-name">'+esc(v.name)+'</span></button>'+
+      (isGuest?'<button class="prof-remove" data-action="remove-guest" data-id="'+v.id+'" aria-label="Remove guest '+esc(v.name)+'">×</button>':'')+
+    '</div>';
+  }).join("");
+  if(state.guests.length<MAX_GUESTS){
+    tiles += '<div class="prof"><button class="prof-btn" data-action="add-guest" aria-label="Add guest profile"><span class="add-face" aria-hidden="true">+</span><span class="prof-name">Add guest profile</span></button></div>';
+  }
+  return '<section class="screen center" aria-labelledby="h">'+
+    '<p class="eyebrow">Your movie night starts here</p>'+
+    '<h1 class="h1" id="h" tabindex="-1">Who’s watching together?</h1>'+
+    '<p class="lead">Different tastes. One great film.<br>Choose your viewers and add as many guests as you need.</p>'+
+    '<div class="stepper" role="group" aria-label="Extra guests">'+
+      '<label for="guest-num">Extra guests</label>'+
+      '<button class="round" data-action="guest-dec" aria-label="Fewer guests" '+(state.guestDraft<=0?"disabled":"")+'>−</button>'+
+      '<input id="guest-num" class="num" type="number" inputmode="numeric" min="0" max="'+MAX_GUESTS+'" value="'+state.guestDraft+'">'+
+      '<button class="round" data-action="guest-inc" aria-label="More guests" '+(state.guestDraft>=MAX_GUESTS?"disabled":"")+'>+</button>'+
+      '<button class="btn btn-ghost btn-sm" data-action="guest-update">Update guests</button>'+
+    '</div>'+
+    '<div class="profiles">'+tiles+'</div>'+
+    '<p class="count-line" aria-live="polite">'+n+' viewer'+(n===1?'':'s')+' selected'+(n<2?' · <span class="warn">choose at least 2 to continue</span>':'')+'</p>'+
+    '<button class="btn" data-action="continue-viewers" '+(n<2?"disabled":"")+'>Continue '+ARROW+'</button>'+
+    '<p class="note">Add more guest profiles with the + tile (up to '+MAX_GUESTS+'). Each selected guest gets their own voting turn.</p>'+
+  '</section>';
+},
+
+mood: function(){
+  var chips = GENRES.map(function(g){var on=state.moods.indexOf(g)>-1;
+    return '<button class="chip" data-action="toggle-mood" data-id="'+g+'" aria-pressed="'+on+'">'+(on?'<span class="ck" aria-hidden="true">✓</span>':'')+g+'</button>';}).join("");
+  var times = Object.keys(TIMES).map(function(k){var on=state.time===k;
+    return '<button class="chip" role="radio" data-action="set-time" data-id="'+k+'" aria-checked="'+on+'" tabindex="'+(on?0:-1)+'">'+(on?'<span class="ck" aria-hidden="true">✓</span>':'')+TIMES[k].label+'</button>';}).join("");
+  return '<section class="screen" aria-labelledby="h"><div class="mood-grid"><div>'+
+    '<p class="eyebrow">Set the vibe</p>'+
+    '<h1 class="h1" id="h" tabindex="-1">What’s the mood tonight?</h1>'+
+    '<p class="lead">A few preferences. A much shorter search.</p>'+
+    (state.notice?'<p class="notice" role="status">'+state.notice+'</p>':'')+
+    '<h2 class="label" id="lbl-mood">We’re in the mood for <span class="muted">Choose any</span></h2>'+
+    '<div class="chips" role="group" aria-labelledby="lbl-mood">'+chips+'</div>'+
+    '<h2 class="label" id="lbl-time">How much time do we have?</h2>'+
+    '<div class="chips" role="radiogroup" aria-labelledby="lbl-time" data-radios>'+times+'</div>'+
+    '<button class="switch" role="switch" data-action="toggle-horror" aria-checked="'+state.noHorror+'"><span class="track" aria-hidden="true"><span class="knob"></span></span>No horror tonight</button>'+
+    '<div class="row actions"><button class="link-btn" data-action="back-viewers">← Back</button><button class="btn" data-action="find-films">Find our films '+ARROW+'</button></div>'+
+  '</div>'+
+  '<div class="mood-art" aria-hidden="true">'+poster(byId["midnight-detour"],{noTitle:true})+
+    '<div class="art-copy"><span class="pill">Made for your movie night</span><h3>A little less debate.<br>A lot more cinema.</h3><p>Choose together. Enjoy together.</p></div></div>'+
+  '</div></section>';
+},
+
+shortlist: function(){
+  var fits = TIMES[state.time].fits;
+  var cards = state.shortlist.map(function(id){var f=byId[id], ok=fits(f.minutes);
+    return '<article class="card" aria-label="'+esc(f.title)+'">'+poster(f)+
+      '<div class="card-body"><div class="card-title"><h3>'+esc(f.title)+'</h3>'+
+      '<button class="play-btn" data-action="preview" data-id="'+id+'" aria-label="Preview '+esc(f.title)+'">'+PLAY+'</button></div>'+
+      '<div class="meta"><span class="fit'+(ok?'':' long')+'">'+(ok?'For your movie night':'A little over your time')+'</span><span>'+dur(f.minutes)+'</span><span class="rating">'+f.rating+'</span></div>'+
+      '<p class="sub">'+esc(f.subgenre)+'</p><p class="tagline">'+esc(f.tagline)+'</p></div></article>';}).join("");
+  return '<section class="screen" aria-labelledby="h">'+
+    '<p class="eyebrow">Less searching. More possibilities.</p>'+
+    '<h1 class="h1" id="h" tabindex="-1">Your top 3.</h1>'+
+    '<div class="sl-head"><p class="lead">'+(state.round>1?'A fresh set of picks. Preview, then pick.':'The closest matches to tonight’s preferences. Preview, then pick.')+'</p>'+
+      '<span class="viewers-pill">'+namesPill(selectedViewers())+'</span></div>'+
+    '<p class="summary">'+esc(summaryLine())+(state.round>1?' · Round '+state.round:'')+' · <span class="tag">Fictional titles for this demo</span></p>'+
+    '<div class="cards">'+cards+'</div>'+
+    '<div class="row actions"><button class="link-btn" data-action="change-prefs">← Change preferences</button>'+
+      '<button class="btn" data-action="start-voting">Start voting '+ARROW+'</button>'+
+      '<span class="muted">Each viewer votes in turn on this device.</span></div>'+
+  '</section>';
+},
+
+vote: function(){
+  var v = state.voters[state.voteIdx], n = state.voters.length, has = state.current.length>0;
+  var cards = state.shortlist.map(function(id){var f=byId[id], on=state.current.indexOf(id)>-1;
+    return '<div class="vcard'+(on?' on':'')+'">'+poster(f)+
+      '<button class="want" data-action="toggle-vote" data-id="'+id+'" aria-pressed="'+on+'" aria-label="I’d watch '+esc(f.title)+'">'+(on?'✓ I’d watch this':'+ I’d watch this')+'</button>'+
+      '<p class="tagline">'+esc(f.tagline)+'</p>'+
+      '<button class="prev" data-action="preview" data-id="'+id+'" aria-label="Preview '+esc(f.title)+'">▶ Preview</button></div>';}).join("");
+  return '<section class="screen" aria-labelledby="h"><div class="vote-grid"><div>'+
+    '<p class="eyebrow">Your choice, privately</p>'+
+    '<h1 class="h1" id="h" tabindex="-1">What would you watch?</h1>'+
+    '<p class="lead">Choose every film you’d enjoy.<br>We’ll find the overlap.</p>'+
+    '<div class="voter"><span class="voter-av" style="background:'+v.color+'" aria-hidden="true">'+esc(v.name.charAt(0).toUpperCase())+'</span><span><b>'+esc(v.name)+' is voting</b><span class="muted">Viewer '+(state.voteIdx+1)+' of '+n+'</span></span></div>'+
+    '<button class="btn" data-action="save-votes" '+(has?'':'disabled')+'>Save my votes '+ARROW+'</button>'+
+    '<p class="note" style="margin-top:18px">'+(has?state.current.length+' of 3 chosen.':'Select at least one film to continue.')+'</p>'+
+    '<p style="margin:6px 0 0"><button class="link-btn small" style="font-weight:500;color:var(--muted)" data-action="skip-votes">None of these work for me</button></p>'+
+    '<p style="margin:18px 0 0"><button class="link-btn" data-action="back-shortlist">← Back to shortlist</button></p>'+
+  '</div><div class="vcards">'+cards+'</div></div></section>';
+},
+
+handoff: function(){
+  var next = state.voters[state.voteIdx], left = state.voters.length - state.voteIdx;
+  return '<section class="screen center handoff" aria-labelledby="h">'+
+    '<p class="eyebrow">'+(left===1?'One more opinion':left+' opinions to go')+'</p>'+
+    '<div class="swap" aria-hidden="true">⟷</div>'+
+    '<h1 class="h1" id="h" tabindex="-1">Over to '+esc(next.name)+'.</h1>'+
+    '<p class="lead">Your votes are saved for this session.<br>Pass the device to the next viewer.</p>'+
+    '<div style="margin:34px 0 22px"><button class="btn" data-action="next-voter">I’m '+esc(next.name)+' '+ARROW+'</button></div>'+
+    '<p class="muted">Previous votes stay hidden while the next person chooses.</p>'+
+  '</section>';
+},
+
+reveal: function(){
+  return '<section class="screen center handoff" aria-labelledby="h">'+
+    '<div class="pulse" aria-hidden="true"></div>'+
+    '<p class="eyebrow">Everyone has voted</p>'+
+    '<h1 class="h1" id="h" tabindex="-1">Finding your overlap…</h1>'+
+  '</section>';
+},
+
+results: function(){
+  var n = state.voters.length;
+  var tally = state.shortlist.map(function(id){
+    var c = state.voters.filter(function(v){return (state.votes[v.id]||[]).indexOf(id)>-1;}).length;
+    return {id:id, c:c};
+  });
+  var mutual = tally.filter(function(t){return t.c===n;});
+  var best = tally.slice().sort(function(a,b){return b.c-a.c;})[0];
+  var tallyHTML = '<h2 class="label" style="margin-top:0">How the votes landed</h2><ul class="tally">'+tally.map(function(t){
+    return '<li><div class="t-row"><span>'+esc(byId[t.id].title)+'</span><span>'+t.c+' of '+n+' said yes</span></div>'+
+      '<div class="bar" aria-hidden="true"><i class="'+(t.c===n?'full':'')+'" style="width:'+(n?Math.max(t.c/n*100,t.c?4:0):0)+'%"></i></div></li>';}).join("")+'</ul>'+
+    '<p class="muted small">Only totals are shown — who voted for what stays private.</p>';
+
+  if(mutual.length){
+    var top = byId[mutual[0].id];
+    var also = mutual.slice(1).map(function(t){return esc(byId[t.id].title);});
+    return '<section class="screen" aria-labelledby="h">'+
+      '<p class="eyebrow">Tonight’s match</p>'+
+      '<h1 class="h1" id="h" tabindex="-1">It’s a match.</h1>'+
+      '<p class="lead">'+(n===2?'You both':'All '+n+' of you')+' said yes to <b>'+esc(top.title)+'</b>.'+(also.length?' Also a match: '+also.join(', ')+'.':'')+'</p>'+
+      '<div class="res-grid" style="margin-top:34px"><div class="match-card">'+poster(top)+
+        '<div class="match-body"><div class="meta" style="margin-top:0"><span class="fit">Mutual match</span><span>'+dur(top.minutes)+'</span><span class="rating">'+top.rating+'</span><span>'+esc(top.subgenre)+'</span></div>'+
+        '<p class="tagline" style="margin-bottom:24px">'+esc(top.tagline)+'</p>'+
+        '<div class="row"><button class="btn" data-action="play" data-id="'+top.id+'">'+PLAY+' Play</button><button class="btn btn-ghost btn-sm" data-action="preview" data-id="'+top.id+'">Preview</button></div></div></div>'+
+      '<div>'+tallyHTML+
+        '<div class="row" style="margin-top:28px"><button class="btn btn-ghost btn-sm" data-action="new-shortlist">Show 3 different films</button><button class="link-btn" data-action="new-night">Start a new night</button></div></div></div>'+
+    '</section>';
+  }
+  var closest = best && best.c>0 ? byId[best.id] : null;
+  return '<section class="screen" aria-labelledby="h">'+
+    '<p class="eyebrow">No overlap — yet</p>'+
+    '<h1 class="h1" id="h" tabindex="-1">No shared pick this time.</h1>'+
+    '<p class="lead">It happens — different tastes are part of movie night. A small tweak often helps, though there are no guarantees.</p>'+
+    '<div class="options">'+
+      '<button class="opt" data-action="relax"><span class="o-ic" aria-hidden="true">⇄</span><b>Relax filters</b><span>Widen the time limit or add another mood, then try again.</span></button>'+
+      '<button class="opt" data-action="new-shortlist"><span class="o-ic" aria-hidden="true">↻</span><b>New shortlist</b><span>Same preferences, three different films.</span></button>'+
+      '<button class="opt" data-action="closest" '+(closest?'data-id="'+closest.id+'"':'disabled')+'><span class="o-ic" aria-hidden="true">◎</span><b>Go with the closest</b><span>'+(closest?esc(closest.title)+' — '+best.c+' of '+n+' said yes.':'Nobody picked a film this round.')+'</span></button>'+
+    '</div>'+
+    '<div style="max-width:640px;margin-top:44px">'+tallyHTML+'</div>'+
+    '<p style="margin-top:24px"><button class="link-btn" data-action="new-night">Start a new night</button></p>'+
+  '</section>';
+},
+
+enjoy: function(){
+  var f = byId[state.playing];
+  return '<section class="screen center handoff" aria-labelledby="h">'+
+    '<p class="eyebrow">Settled</p>'+
+    '<h1 class="h1" id="h" tabindex="-1">Enjoy '+esc(f.title)+'.</h1>'+
+    '<p class="lead">Playback isn’t part of this concept demo — but the hard part is done.</p>'+
+    '<div class="row" style="justify-content:center;margin-top:34px"><button class="btn" data-action="new-night">Plan another night '+ARROW+'</button><button class="link-btn" data-action="go-landing">Back to start</button></div>'+
+  '</section>';
+},
+
+catalog: function(){
+  return '<section class="screen" aria-labelledby="h">'+
+    '<p class="eyebrow">Browse</p>'+
+    '<h1 class="h1" id="h" tabindex="-1">Movies.</h1>'+
+    '<div class="row"><p class="lead" style="margin:0">Every title in this demo.</p><span class="tag">Fictional titles for this demo</span></div>'+
+    '<div class="grid-cat">'+FILMS.map(function(f){
+      return '<button class="cat" data-action="preview" data-id="'+f.id+'" aria-label="Preview '+esc(f.title)+'">'+poster(f)+'<div class="cat-meta">'+esc(f.genres.join(" · "))+' · '+dur(f.minutes)+'</div></button>';}).join("")+'</div>'+
+    '<div class="actions"><button class="btn" data-action="start">Start Together '+ARROW+'</button></div>'+
+  '</section>';
+}
+};
+
+/* ================= RENDER ================= */
+var app = document.getElementById("app");
+var lastScreen = null;
+function focusKey(el){ return el && el.dataset ? (el.dataset.action||el.id||"")+"|"+(el.dataset.id||"") : null; }
+
+function render(){
+  var same = lastScreen === state.screen;
+  var key = same ? focusKey(document.activeElement) : null;
+  document.body.classList.toggle("no-anim", same);
+  app.innerHTML = screens[state.screen]();
+  // header nav state
+  document.querySelectorAll("[data-nav]").forEach(function(b){
+    var active = state.screen==="catalog" ? b.dataset.nav==="movies" : b.dataset.nav==="together";
+    if(active) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
+  });
+  // flow progress dots
+  var step = STEP[state.screen], d = "";
+  for(var i=0;i<6;i++) d += '<i class="'+(i<=step && step>=0?'on':'')+'"></i>';
+  document.getElementById("dots").innerHTML = d;
+
+  if(same){
+    if(key){
+      var parts = key.split("|"), sel = parts[0].indexOf("guest-num")===0 ? "#guest-num" :
+        '[data-action="'+parts[0]+'"]'+(parts[1]?'[data-id="'+parts[1]+'"]':'');
+      var t = app.querySelector(sel);
+      if(!t && parts[0]==="toggle-profile") t = app.querySelector('[data-action="toggle-profile"]');
+      if(t && !t.disabled) t.focus();
+      else if(parts[0]==="add-guest" || parts[0]==="remove-guest" || parts[0]==="guest-update"){ var fb = app.querySelector('[data-action="guest-update"]'); if(fb) fb.focus(); }
+    }
+  } else {
+    window.scrollTo(0,0);
+    var h = app.querySelector("h1"); if(h) h.focus({preventScroll:true});
+  }
+  lastScreen = state.screen;
+}
+function go(screen){ state.screen = screen; render(); }
+
+/* ================= MODALS ================= */
+var modalRoot = document.getElementById("modal-root"), modalReturn = null;
+function openModal(html, label){
+  modalReturn = document.activeElement;
+  modalRoot.innerHTML = '<div class="modal-back" data-action="close-modal-back"><div class="modal'+(label==="guest"?' modal-sm':'')+'" role="dialog" aria-modal="true" aria-labelledby="m-h">'+html+'</div></div>';
+  var first = modalRoot.querySelector("input,button:not(.modal-x),button");
+  if(first) first.focus();
+}
+function closeModal(){
+  if(!modalRoot.innerHTML) return;
+  modalRoot.innerHTML = "";
+  if(modalReturn && document.body.contains(modalReturn)) modalReturn.focus();
+}
+function previewModal(id){
+  var f = byId[id];
+  openModal('<button class="modal-x" data-action="close-modal" aria-label="Close preview">×</button>'+poster(f)+
+    '<div class="modal-body"><h2 id="m-h" style="margin:0 0 6px;font-size:1.8rem;letter-spacing:-.03em">'+esc(f.title)+'</h2>'+
+    '<div class="meta"><span>'+dur(f.minutes)+'</span><span class="rating">'+f.rating+'</span><span>'+esc(f.genres.join(" · "))+'</span></div>'+
+    '<p class="tagline" style="font-size:1.1rem">'+esc(f.tagline)+'</p>'+
+    '<div class="prog" aria-hidden="true"><i></i></div><p class="muted small" style="margin:0">Preview placeholder — trailers aren’t included in this demo. Fictional title.</p></div>');
+}
+function guestModal(){
+  var nextNum = state.guestSeq+1;
+  openModal('<form id="guest-form"><h2 id="m-h">Add a guest</h2><p class="muted" style="margin:0">They’ll get their own private voting turn.</p>'+
+    '<label class="sr-only" for="guest-name">Guest name</label><input class="field" id="guest-name" maxlength="18" autocomplete="off" placeholder="Guest '+nextNum+'">'+
+    '<div class="row"><button class="btn btn-sm" type="submit">Add guest</button><button class="link-btn" type="button" data-action="close-modal">Cancel</button></div></form>', "guest");
+  document.getElementById("guest-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    var name = document.getElementById("guest-name").value.trim();
+    addGuest(name);
+    closeModal(); state.guestDraft = state.guests.length; render();
+    var t = app.querySelector('[data-action="add-guest"]') || app.querySelector('[data-action="guest-update"]'); if(t) t.focus();
+    toast((name||"Guest")+" added.");
+  });
+}
+function addGuest(name){
+  if(state.guests.length>=MAX_GUESTS) return;
+  state.guestSeq++;
+  state.guests.push({id:"guest-"+state.guestSeq, name:name||("Guest "+state.guestSeq), color:GUEST_COLORS[(state.guestSeq-1)%GUEST_COLORS.length], selected:true, guest:true});
+}
+var toastTimer;
+function toast(msg){
+  var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){t.classList.remove("show");}, 2600);
+}
+
+/* ================= ACTIONS ================= */
+function startVoting(){
+  state.voters = selectedViewers(); state.voteIdx = 0; state.votes = {}; state.current = [];
+  go("vote");
+}
+function saveVote(list){
+  state.votes[state.voters[state.voteIdx].id] = list.slice();
+  state.current = []; state.voteIdx++;
+  if(state.voteIdx < state.voters.length) go("handoff");
+  else {
+    go("reveal");
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(function(){ if(state.screen==="reveal") go("results"); }, reduce?150:1300);
+  }
+}
+var actions = {
+  "go-landing": function(){ closeModal(); go("landing"); },
+  "go-catalog": function(){ go("catalog"); },
+  "start": function(){ state.guestDraft = state.guests.length; go("viewers"); },
+  "toggle-profile": function(id){ var v = allViewers().filter(function(x){return x.id===id;})[0]; if(v){ v.selected=!v.selected; render(); } },
+  "guest-dec": function(){ state.guestDraft = Math.max(0,state.guestDraft-1); render(); },
+  "guest-inc": function(){ state.guestDraft = Math.min(MAX_GUESTS,state.guestDraft+1); render(); },
+  "guest-update": function(){
+    var target = Math.max(0,Math.min(MAX_GUESTS,state.guestDraft|0)), before = state.guests.length;
+    if(target < before) state.guests = state.guests.slice(0,target);
+    while(state.guests.length < target) addGuest("");
+    state.guestDraft = state.guests.length; render();
+    toast(state.guests.length===before ? "Guests unchanged." : state.guests.length+" extra guest"+(state.guests.length===1?"":"s")+" in tonight’s session.");
+  },
+  "add-guest": function(){ if(state.guests.length<MAX_GUESTS) guestModal(); else toast("Maximum of "+MAX_GUESTS+" guests."); },
+  "remove-guest": function(id){ state.guests = state.guests.filter(function(g){return g.id!==id;}); state.guestDraft = state.guests.length; render(); },
+  "continue-viewers": function(){ if(selectedViewers().length>=2){ state.notice=""; go("mood"); } },
+  "toggle-mood": function(g){
+    var i = state.moods.indexOf(g);
+    if(i>-1) state.moods.splice(i,1); else { state.moods.push(g); if(g==="Horror" && state.noHorror){ state.noHorror=false; toast("Horror is back on the menu."); } }
+    render();
+  },
+  "set-time": function(k){ state.time = k; render(); },
+  "toggle-horror": function(){
+    state.noHorror = !state.noHorror;
+    if(state.noHorror){ var i = state.moods.indexOf("Horror"); if(i>-1) state.moods.splice(i,1); }
+    render();
+  },
+  "back-viewers": function(){ go("viewers"); },
+  "find-films": function(){ state.round = 1; state.seen = []; state.shortlist = []; buildShortlist(true); state.notice=""; go("shortlist"); },
+  "change-prefs": function(){ go("mood"); },
+  "start-voting": startVoting,
+  "toggle-vote": function(id){ var i = state.current.indexOf(id); if(i>-1) state.current.splice(i,1); else state.current.push(id); render(); },
+  "save-votes": function(){ if(state.current.length) saveVote(state.current); },
+  "skip-votes": function(){ saveVote([]); },
+  "back-shortlist": function(){ state.current = []; state.votes = {}; state.voteIdx = 0; go("shortlist"); },
+  "next-voter": function(){ go("vote"); },
+  "preview": previewModal,
+  "play": function(id){ state.playing = id; go("enjoy"); },
+  "closest": function(id){ state.playing = id; go("enjoy"); },
+  "new-shortlist": function(){ state.round++; buildShortlist(true); go("shortlist"); },
+  "relax": function(){
+    var msg;
+    if(state.time==="u2"){ state.time="u3"; msg="We widened the time limit to <b>Up to 3 hours</b>. Add another mood too, if you like — then find your films again."; }
+    else if(state.time==="u3"){ state.time="any"; msg="We widened the time limit to <b>Any length</b>. Try adding another mood, then find your films again."; }
+    else msg="Time is already open. Try adding a mood or two"+(state.noHorror?", or allow horror":"")+", then find your films again.";
+    state.notice = msg; go("mood");
+  },
+  "new-night": function(){ state.votes={}; state.voters=[]; state.voteIdx=0; state.current=[]; state.round=1; state.seen=[]; state.notice=""; state.guestDraft=state.guests.length; go("viewers"); },
+  "close-modal": closeModal,
+  "close-modal-back": function(id, e){ if(e.target.classList.contains("modal-back")) closeModal(); },
+  "fullscreen": function(){
+    var d = document, el = d.documentElement;
+    if(d.fullscreenElement || d.webkitFullscreenElement){ (d.exitFullscreen||d.webkitExitFullscreen).call(d); }
+    else { var r = el.requestFullscreen||el.webkitRequestFullscreen; if(r) r.call(el); else toast("Fullscreen isn’t supported here."); }
+  }
+};
+
+document.addEventListener("click", function(e){
+  var el = e.target.closest("[data-action]");
+  if(!el || el.disabled) return;
+  var a = el.dataset.action;
+  if(a==="close-modal-back" && e.target!==el) return; // clicks inside the dialog
+  if(actions[a]) actions[a](el.dataset.id, e);
+});
+document.addEventListener("input", function(e){
+  if(e.target.id==="guest-num"){ var v = parseInt(e.target.value,10); state.guestDraft = isNaN(v)?0:Math.max(0,Math.min(MAX_GUESTS,v)); }
+});
+document.addEventListener("keydown", function(e){
+  if(e.key==="Escape" && modalRoot.innerHTML){ closeModal(); return; }
+  if(e.target.id==="guest-num" && e.key==="Enter"){ e.target.blur(); actions["guest-update"](); var b=app.querySelector('[data-action="guest-update"]'); if(b) b.focus(); return; }
+  // Arrow keys move within the time radiogroup
+  var rg = e.target.closest && e.target.closest("[data-radios]");
+  if(rg && /^Arrow(Left|Right|Up|Down)$/.test(e.key)){
+    e.preventDefault();
+    var keys = Object.keys(TIMES), i = keys.indexOf(state.time);
+    i = (i + (/Right|Down/.test(e.key)?1:-1) + keys.length) % keys.length;
+    state.time = keys[i]; render();
+    var t = app.querySelector('[data-action="set-time"][data-id="'+keys[i]+'"]'); if(t) t.focus();
+  }
+  // simple focus trap inside the dialog
+  if(e.key==="Tab" && modalRoot.innerHTML){
+    var f = modalRoot.querySelectorAll("button,input"); if(!f.length) return;
+    var first = f[0], last = f[f.length-1];
+    if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+  }
+});
+
+probeImages();
+render();
+})();
+</script>
+</body>
+</html>
